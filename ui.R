@@ -5,8 +5,8 @@ shinyUI(pageWithSidebar(
   ),
   mainPanel(
     tags$head(tags$script(src = "enter_button.js")), 
-    htmlOutput("answerTitle"),
-    verbatimTextOutput("oText"),
+    htmlOutput("questionTitle"),
+    verbatimTextOutput("questionText"),
     textInput("text", "Answer:", "[Answer]"),
     actionButton("goButton", "Go!"),
     br(),
