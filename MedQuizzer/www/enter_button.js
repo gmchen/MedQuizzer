@@ -4,9 +4,9 @@ $(document).keyup(function(event){
 		            $("#text").select();
 			        }
 });
-$(document).on('click', function() {
-      $("#text").select();
-});
+//$(document).on('click', function() {
+//      $("#text").select();
+//});
 
 //<audio id="yepsound" src="yep.wav"></audio>
 //<audio id="nopesound" src="nope.wav"></audio>

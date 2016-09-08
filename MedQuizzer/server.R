@@ -2,9 +2,17 @@ library(stringr)
 library(RCurl)
 library(googlesheets)
 
-biochemUrl <- "https://docs.google.com/spreadsheets/d/1vSe9pLzvAre6geRtqKbJLDmh5oJqIXyOz1_KSmhKOcY/edit?usp=sharing"
-biochemKey <- extract_key_from_url(biochemUrl)
-biochemGS <- gs_key(biochemKey)
+courses <- c("Biochemistry", "Cell and Tissue Biology", "Embryology", "Genetics")
+course.abbreviations <- c("Biochem", "CTB", "Embryo", "Genetics")
+course.urls <- c("https://docs.google.com/spreadsheets/d/1vSe9pLzvAre6geRtqKbJLDmh5oJqIXyOz1_KSmhKOcY",
+                 "https://docs.google.com/spreadsheets/d/13JzVU2X-Jp8-meMB23srn2q82FCprouTQxVDumBfIXg",
+                 "https://docs.google.com/spreadsheets/d/1IjT1NnIGwrYYIepIbF1Wg9WzDNNBKETyJeVufCtx3SI",
+                 "https://docs.google.com/spreadsheets/d/1xQ3gjE9tUce2t4_zVQfdydOlGjnOdr00PxXhKJaJSbg/edit?usp=sharing")
+
+googlesheets_keys <- lapply(course.urls, extract_key_from_url)
+googlesheets_GS <- lapply(googlesheets_keys, gs_key)
+
+biochemGS <- googlesheets_GS[[1]]
 
 my.data <- gs_read(biochemGS, ws = 2, col_names=FALSE)
 
@@ -23,7 +31,7 @@ currentQuestionText <- ""
 currentAnswers <- ""
 animatingText <- FALSE
 animationCounter <- 0
-maxAnimationCounter <- 9
+maxAnimationCounter <- 30
 
 string_equals <- function(str1, str2) {
   str1 <- toupper(str_replace_all(str1, "[^[:alnum:]]", ""))
@@ -43,8 +51,22 @@ string_equals <- function(str1, str2) {
 
 shinyServer(function(input, output, session) {
   
+  output$boxSelectCourse = renderUI(selectInput("selectCourse", label="Select a Course", choices=courses,selected=1))
+  #output$boxSelectLecture = checkboxGroupInput("selectLecture", label = "Lecture Title", 
+  #                                      choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3))
+  
+  output$boxSelectLecture = renderUI(
+    if (is.null(input$selectCourse)) {
+      return()
+    } else
+      checkboxGroupInput("selectLecture", 
+        label="Select a Lecture", 
+        choices=googlesheets_GS[[which(courses == input$selectCourse)]]$ws$ws_title
+        )
+  )
+  
   output$questionTitle <- renderText("<b>Question:</b>")
-  output$oText <- renderText("Once you have loaded questions, hit <Enter>")
+  output$questionText <- renderText("Once you have loaded questions, hit ENTER")
   
   outText <- eventReactive(input$goButton, {
     textToWrite <- ""
@@ -88,7 +110,7 @@ shinyServer(function(input, output, session) {
         animatingText <- FALSE
       } else {
         output$questionText <- renderText(paste0(paste0(rep(" ", animationCounter), collapse = ""), currentQuestionText))
-        animationCounter <<- animationCounter - 3;
+        animationCounter <<- animationCounter - 1;
       }
     }
     
