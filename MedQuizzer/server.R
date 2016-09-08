@@ -23,7 +23,7 @@ currentQuestionText <- ""
 currentAnswers <- ""
 animatingText <- FALSE
 animationCounter <- 0
-maxAnimationCounter <- 10
+maxAnimationCounter <- 9
 
 string_equals <- function(str1, str2) {
   str1 <- toupper(str_replace_all(str1, "[^[:alnum:]]", ""))
@@ -55,8 +55,12 @@ shinyServer(function(input, output, session) {
       correct <- any(sapply(oldAnswerText, function(answer) string_equals(answer, givenAnswer)))
       if(correct) {
         textToWrite <- paste0("Correct! The correct answer was ", oldAnswerText[1])
+        # Trigger yepbutton
+        session$sendCustomMessage(type='myCallbackHandler', 1) 
       } else {
         textToWrite <- paste0("Nice try. The correct answer is ", oldAnswerText[1])
+        # Trigger nopebutton
+        session$sendCustomMessage(type='myCallbackHandler', 0) 
       }
     }
     
@@ -80,10 +84,11 @@ shinyServer(function(input, output, session) {
     autoInvalidate()
     if(animatingText) {
       if(animationCounter <= 0) {
+        animationCounter <-- 0
         animatingText <- FALSE
       } else {
         output$questionText <- renderText(paste0(paste0(rep(" ", animationCounter), collapse = ""), currentQuestionText))
-        animationCounter <<- animationCounter - 1;
+        animationCounter <<- animationCounter - 3;
       }
     }
     
