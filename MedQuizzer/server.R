@@ -1,5 +1,4 @@
 library(stringr)
-library(RCurl)
 library(googlesheets)
 
 courses <- c("Embryology", "Biochemistry", "Cell and Tissue Biology", "Genetics")
