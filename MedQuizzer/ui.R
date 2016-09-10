@@ -4,7 +4,9 @@ shinyUI(pageWithSidebar(
     # To be populated with select course
     uiOutput("boxSelectCourse"),
     # To be populated with radio buttons
-    uiOutput("boxSelectLecture")
+    uiOutput("boxSelectLecture"),
+    actionButton("loadButton", "Load Data"),
+    verbatimTextOutput("outTextLoad")
     #selectInput("selectCourse", label = h3("Select box"), 
     #            choices = list("Choice 1" = 1, "Choice 2" = 2, "Choice 3" = 3), 
     #            selected = 1),
@@ -17,7 +19,7 @@ shinyUI(pageWithSidebar(
     tags$head(tags$script(src = "enter_button.js")), 
     htmlOutput("questionTitle"),
     htmlOutput("questionText"),
-    textInput("text", "Answer:", "[Answer]"),
+    textInput("text", "Answer:", ""),
     actionButton("goButton", "Go!"),
     br(),
     br(),

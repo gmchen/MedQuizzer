@@ -4,6 +4,9 @@ $(document).keyup(function(event){
 		            $("#text").select();
 			        }
 });
+//$("#loadButton").click(function() {
+//      $("#text").select();
+//});
 //$(document).on('click', function() {
 //      $("#text").select();
 //});

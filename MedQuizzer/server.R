@@ -19,11 +19,8 @@ my.data <- gs_read(biochemGS, ws = 2, col_names=FALSE)
 my.data <- as.data.frame(my.data)
 
 quiz.data <- list(
-  questions=my.data[,1],
-  answers=as.vector(sapply(1:nrow(my.data), function(rowindex) {
-    # Get all non-NA columns in this row, exclude the question
-    my.data[rowindex, !is.na(my.data[rowindex,])][-1]
-  }))
+  questions=vector(),
+  answers=list()
   )
 
 counter <- 0
@@ -68,7 +65,7 @@ shinyServer(function(input, output, session) {
   output$questionTitle <- renderText("<b>Question:</b>")
   output$questionText <- renderText("Once you have loaded questions, hit ENTER")
   
-  outText <- eventReactive(input$goButton, {
+  outTextFromGoButton <- eventReactive(input$goButton, {
     textToWrite <- ""
     if(counter > 0) {
       oldQuestionText <- currentQuestionText
@@ -76,11 +73,11 @@ shinyServer(function(input, output, session) {
       givenAnswer <- input$text
       correct <- any(sapply(oldAnswerText, function(answer) string_equals(answer, givenAnswer)))
       if(correct) {
-        textToWrite <- paste0("Correct! The correct answer was ", oldAnswerText[1])
+        textToWrite <- paste0("Correct! The correct answer was: ", oldAnswerText[1])
         # Trigger yepbutton
         session$sendCustomMessage(type='myCallbackHandler', 1) 
       } else {
-        textToWrite <- paste0("Nice try. The correct answer is ", oldAnswerText[1])
+        textToWrite <- paste0("Nice try. The correct answer is: ", oldAnswerText[1])
         # Trigger nopebutton
         session$sendCustomMessage(type='myCallbackHandler', 0) 
       }
@@ -90,30 +87,66 @@ shinyServer(function(input, output, session) {
     currentQuestionText <<- quiz.data$questions[counter]
     currentAnswers <<- quiz.data$answers[[counter]]
     
-    #output$questionText <- renderText(currentQuestionText)
-    animationCounter <<- maxAnimationCounter
-    animatingText <<- TRUE
+    output$questionText <- renderText(currentQuestionText)
+    
+    # The animations aren't working right now.
+    #animationCounter <<- maxAnimationCounter
+    #animatingText <<- TRUE
     
     return(textToWrite)
   })
-  
   output$outText <- renderText({
-    outText()
+    outTextFromGoButton()
   })
   
-  autoInvalidate <- reactiveTimer(1)
-  observe({
-    autoInvalidate()
-    if(animatingText) {
-      if(animationCounter <= 0) {
-        animationCounter <-- 0
-        animatingText <- FALSE
-      } else {
-        output$questionText <- renderText(paste0(paste0(rep(" ", animationCounter), collapse = ""), currentQuestionText))
-        animationCounter <<- animationCounter - 1;
-      }
-    }
+  outTextFromLoadButton <- eventReactive(input$loadButton, {
+    # Get the index of the selected course
+    courseIndex <- which(courses == input$selectCourse)
     
+    course_GS <- googlesheets_GS[[courseIndex]]
+    
+    # get the index of selected lectures
+    lectureIndex <- which(input$selectLecture == course_GS$ws$ws_title)
+    
+    quiz.data.list <- lapply(lectureIndex, function(currentLectureIndex) {
+      my.data <- gs_read(course_GS, ws = currentLectureIndex, col_names=FALSE)
+      my.data <- as.data.frame(my.data)
+      if(nrow(my.data) == 0) {
+        return(list(questions=c(), answers=c()))
+      }
+      current.quiz.data <- list(
+        questions=my.data[,1],
+        answers=as.vector(sapply(1:nrow(my.data), function(rowindex) {
+          # Get all non-NA columns in this row, exclude the question
+          my.data[rowindex, !is.na(my.data[rowindex,])][-1]
+        }))
+      )
+      return(current.quiz.data)
+    })
+    
+    quiz.data <<- unlist(quiz.data.list,recursive=F)
+    counter <<- 0
+    
+    return("Loaded data!")
   })
+  
+  output$outTextLoad <- renderText({
+    outTextFromLoadButton()
+  })
+  
+  # Text Animations
+  #autoInvalidate <- reactiveTimer(1)
+  #observe({
+  #  autoInvalidate()
+  #  if(animatingText) {
+  #    if(animationCounter <= 0) {
+  #      animationCounter <-- 0
+  #      animatingText <- FALSE
+  #    } else {
+  #      output$questionText <- renderText(paste0(paste0(rep(" ", animationCounter), collapse = ""), currentQuestionText))
+  #      animationCounter <<- animationCounter - 1;
+  #    }
+  #  }
+  #})
  
 })
