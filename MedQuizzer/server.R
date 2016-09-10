@@ -58,7 +58,8 @@ shinyServer(function(input, output, session) {
     } else
       checkboxGroupInput("selectLecture", 
         label="Select a Lecture", 
-        choices=googlesheets_GS[[which(courses == input$selectCourse)]]$ws$ws_title
+        choices=googlesheets_GS[[which(courses == input$selectCourse)]]$ws$ws_title,
+        selected=googlesheets_GS[[which(courses == input$selectCourse)]]$ws$ws_title
         )
   )
   
@@ -107,27 +108,34 @@ shinyServer(function(input, output, session) {
     
     # get the index of selected lectures
     lectureIndex <- which(input$selectLecture == course_GS$ws$ws_title)
-    
-    quiz.data.list <- lapply(lectureIndex, function(currentLectureIndex) {
+    questions <- c()
+    answers <- list()
+    for(currentLectureIndex in lectureIndex) {
       my.data <- gs_read(course_GS, ws = currentLectureIndex, col_names=FALSE)
       my.data <- as.data.frame(my.data)
       if(nrow(my.data) == 0) {
-        return(list(questions=c(), answers=c()))
+        next
       }
-      current.quiz.data <- list(
-        questions=my.data[,1],
-        answers=as.vector(sapply(1:nrow(my.data), function(rowindex) {
+      
+      current.questions=my.data[,1]
+      current.answers=as.vector(sapply(1:nrow(my.data), function(rowindex) {
           # Get all non-NA columns in this row, exclude the question
-          my.data[rowindex, !is.na(my.data[rowindex,])][-1]
+        my.data[rowindex, !is.na(my.data[rowindex,])][-1]
         }))
-      )
-      return(current.quiz.data)
-    })
+      questions <- c(questions, current.questions)
+      answers <- c(answers, current.answers)
+    }
     
-    quiz.data <<- unlist(quiz.data.list,recursive=F)
+    #Randomize the order of questions.
+    permutation <- sample(1:length(questions))
+    questions <- questions[permutation]
+    answers <- answers[permutation]
+    
+    quiz.data <<- list(questions=questions, answers=answers)
+    
     counter <<- 0
     
-    return("Loaded data!")
+    return(paste0("Loaded ", length(quiz.data$questions), " questions from ", input$selectCourse, "."))
   })
   
   output$outTextLoad <- renderText({
