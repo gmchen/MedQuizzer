@@ -28,6 +28,7 @@ currentAnswers <- ""
 animatingText <- FALSE
 animationCounter <- 0
 maxAnimationCounter <- 30
+firstQuestion <- TRUE
 
 string_equals <- function(str1, str2) {
   str1 <- toupper(str_replace_all(str1, "[^[:alnum:]]", ""))
@@ -68,9 +69,14 @@ shinyServer(function(input, output, session) {
   outTextFromGoButton <- eventReactive(input$goButton, {
     if(length(quiz.data$questions) == 0) {
       return("Load data to begin.")
+    }
+    if(counter > length(quiz.data$questions)) {
+      counter <- 1
       }
     textToWrite <- ""
-    if(counter > 1) {
+    if(firstQuestion) {
+      firstQuestion <<- FALSE
+    } else {
       oldQuestionText <- currentQuestionText
       oldAnswerText <- currentAnswers[1]
       givenAnswer <- input$text
@@ -137,6 +143,7 @@ shinyServer(function(input, output, session) {
     quiz.data <<- list(questions=questions, answers=answers)
     
     counter <<- 1
+    firstQuestion <<- TRUE
     
     return(paste0("Loaded ", length(quiz.data$questions), " questions from ", input$selectCourse, "."))
   })
