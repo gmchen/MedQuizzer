@@ -80,7 +80,7 @@ shinyServer(function(input, output, session) {
       oldQuestionText <- currentQuestionText
       oldAnswerText <- currentAnswers[1]
       givenAnswer <- input$text
-      correct <- any(sapply(oldAnswerText, function(answer) string_equals(answer, givenAnswer)))
+      correct <- any(sapply(currentAnswers, function(answer) string_equals(answer, givenAnswer)))
       if(correct) {
         textToWrite <- paste0("Correct! The correct answer was: ", oldAnswerText[1])
         # Trigger yepbutton
@@ -127,10 +127,10 @@ shinyServer(function(input, output, session) {
       }
       
       current.questions=my.data[,1]
-      current.answers=as.vector(sapply(1:nrow(my.data), function(rowindex) {
+      current.answers=lapply(1:nrow(my.data), function(rowindex) {
           # Get all non-NA columns in this row, exclude the question
-        my.data[rowindex, !is.na(my.data[rowindex,])][-1]
-        }))
+        as.character(my.data[rowindex, !is.na(my.data[rowindex,])][-1])
+        })
       questions <- c(questions, current.questions)
       answers <- c(answers, current.answers)
     }
