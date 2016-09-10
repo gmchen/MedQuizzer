@@ -2,11 +2,11 @@ library(stringr)
 library(RCurl)
 library(googlesheets)
 
-courses <- c("Biochemistry", "Cell and Tissue Biology", "Embryology", "Genetics")
+courses <- c("Embryology", "Biochemistry", "Cell and Tissue Biology", "Genetics")
 course.abbreviations <- c("Biochem", "CTB", "Embryo", "Genetics")
-course.urls <- c("https://docs.google.com/spreadsheets/d/1vSe9pLzvAre6geRtqKbJLDmh5oJqIXyOz1_KSmhKOcY",
+course.urls <- c("https://docs.google.com/spreadsheets/d/1IjT1NnIGwrYYIepIbF1Wg9WzDNNBKETyJeVufCtx3SI",
+                 "https://docs.google.com/spreadsheets/d/1vSe9pLzvAre6geRtqKbJLDmh5oJqIXyOz1_KSmhKOcY",
                  "https://docs.google.com/spreadsheets/d/13JzVU2X-Jp8-meMB23srn2q82FCprouTQxVDumBfIXg",
-                 "https://docs.google.com/spreadsheets/d/1IjT1NnIGwrYYIepIbF1Wg9WzDNNBKETyJeVufCtx3SI",
                  "https://docs.google.com/spreadsheets/d/1xQ3gjE9tUce2t4_zVQfdydOlGjnOdr00PxXhKJaJSbg/edit?usp=sharing")
 
 googlesheets_keys <- lapply(course.urls, extract_key_from_url)
@@ -23,7 +23,7 @@ quiz.data <- list(
   answers=list()
   )
 
-counter <- 0
+counter <- 1
 currentQuestionText <- ""
 currentAnswers <- ""
 animatingText <- FALSE
@@ -67,8 +67,11 @@ shinyServer(function(input, output, session) {
   output$questionText <- renderText("Once you have loaded questions, hit ENTER")
   
   outTextFromGoButton <- eventReactive(input$goButton, {
+    if(length(quiz.data$questions) == 0) {
+      return("Load data to begin.")
+      }
     textToWrite <- ""
-    if(counter > 0) {
+    if(counter > 1) {
       oldQuestionText <- currentQuestionText
       oldAnswerText <- currentAnswers[1]
       givenAnswer <- input$text
@@ -84,9 +87,10 @@ shinyServer(function(input, output, session) {
       }
     }
     
-    counter <<- counter + 1
-    currentQuestionText <<- quiz.data$questions[counter]
+    currentQuestionText <<- paste0("[", counter, "/", length(quiz.data$questions), "] ", quiz.data$questions[counter])
+    
     currentAnswers <<- quiz.data$answers[[counter]]
+    counter <<- counter + 1
     
     output$questionText <- renderText(currentQuestionText)
     
@@ -133,7 +137,7 @@ shinyServer(function(input, output, session) {
     
     quiz.data <<- list(questions=questions, answers=answers)
     
-    counter <<- 0
+    counter <<- 1
     
     return(paste0("Loaded ", length(quiz.data$questions), " questions from ", input$selectCourse, "."))
   })
