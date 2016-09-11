@@ -40,7 +40,7 @@ string_equals <- function(str1, str2) {
     str2 <- temp
   }
   # Remove a trailing s if str2 is longer
-  if(nchar(str2) > nchar(str1) && substr(str2,nchar(str2),nchar(str2)) == "s") {
+  if(nchar(str2) > nchar(str1) && substr(str2,nchar(str2),nchar(str2)) == "S") {
     str2 <- substr(str2, 1, nchar(str2)-1)
   }
   return(str1 == str2)
